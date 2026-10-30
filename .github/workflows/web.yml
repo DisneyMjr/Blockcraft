@@ -1,0 +1,45 @@
+name: Publicar Blockcraft Web
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: blockcraft-pages
+  cancel-in-progress: true
+jobs:
+  web:
+    runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Godot 4.4.1 e templates
+        shell: bash
+        run: |
+          set -euxo pipefail
+          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip -O /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp
+          sudo install -m 755 /tmp/Godot_v4.4.1-stable_linux.x86_64 /usr/local/bin/godot
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.4.1.stable" /tmp/godot-templates
+          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz -O /tmp/templates.tpz
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          cp /tmp/godot-templates/templates/* "$HOME/.local/share/godot/export_templates/4.4.1.stable/"
+      - name: Importar projeto e exportar HTML5
+        run: |
+          godot --headless --editor --path . --quit
+          mkdir -p build/web
+          godot --headless --path . --export-release Web build/web/index.html
+          test -s build/web/index.html
+          touch build/web/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4

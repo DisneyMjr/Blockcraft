@@ -27,6 +27,7 @@ var move_touch := -1
 var move_origin := Vector2.ZERO
 var last_look := Vector2.ZERO
 var clock := 0.0
+var stream_clock := 0.0
 var sun: DirectionalLight3D
 
 func _ready() -> void:
@@ -150,6 +151,7 @@ func _start_game(is_survival: bool) -> void:
 	survival = is_survival
 	hearts = 10
 	inventory = [64, 64, 64, 64, 64, 64, 64, 64] if not survival else [12, 8, 0, 0, 0, 0, 0, 0]
+	world.edits.clear()
 	world.generate_world()
 	player.position = Vector3(0.5, world.height_at(0, 0) + 3.5, 0.5)
 	player.velocity = Vector3.ZERO
@@ -218,11 +220,16 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("jump"):
 		_jump()
 	player.move_and_slide()
+	stream_clock += delta
+	if stream_clock > 0.3:
+		stream_clock = 0.0
+		world.update_stream(player.global_position)
 	if player.position.y < -20:
-		player.position = Vector3(0, world.height_at(0, 0) + 4.0, 0)
+		player.position = Vector3(player.position.x, world.height_at(floori(player.position.x), floori(player.position.z)) + 4.0, player.position.z)
 	if survival and player.position.y < -10:
 		hearts = maxi(0, hearts - 1)
 	info_label.text = "%s | %s | %s (%d) | %s" % [selected_character, "Sobrevivência" if survival else "Criativo", BlockWorld.NAMES[selected_block], inventory[selected_block], "Vida: %d" % hearts if survival else "Blocos livres"]
+	info_label.text += " | Regioes: %d" % world.chunks.size()
 
 func _jump() -> void:
 	if started and player.is_on_floor():
@@ -310,7 +317,7 @@ func _look(motion: Vector2, factor: float = 1.0) -> void:
 func _save_game() -> void:
 	if not started:
 		return
-	var data := {"character": selected_character, "survival": survival, "position": [player.position.x, player.position.y, player.position.z], "blocks": world.snapshot(), "inventory": inventory, "health": hearts}
+	var data := {"character": selected_character, "survival": survival, "position": [player.position.x, player.position.y, player.position.z], "edits": world.snapshot(), "seed": world.seed_value, "inventory": inventory, "health": hearts}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data))
@@ -323,8 +330,19 @@ func _load_game() -> void:
 		return
 	if parsed.get("character", "") != selected_character or bool(parsed.get("survival", false)) != survival:
 		return
-	if parsed.has("blocks") and parsed["blocks"] is Array:
-		world.restore(parsed["blocks"])
+	if parsed.has("edits") and parsed["edits"] is Array:
+		world.restore(parsed["edits"])
+	elif parsed.has("blocks") and parsed["blocks"] is Array:
+		# Compatibilidade com o salvamento da versao 0.1: preservar alteracoes feitas pelo jogador.
+		var old_edits: Array = []
+		for entry in parsed["blocks"]:
+			if entry is Array and entry.size() == 4:
+				var x := int(entry[0])
+				var y := int(entry[1])
+				var z := int(entry[2])
+				if y > world.height_at(x, z):
+					old_edits.append(entry)
+		world.restore(old_edits)
 	if parsed.has("position") and parsed["position"].size() == 3:
 		var p: Array = parsed["position"]
 		player.position = Vector3(float(p[0]), float(p[1]), float(p[2]))
