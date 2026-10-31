@@ -1,4 +1,4 @@
-# Blockcraft 1.2: Fundação Estável (atualização incremental)
+# Blockcraft 1.2.1: Fundação Estável (atualização incremental)
 
 Este pacote parte do **Blockcraft 1.1.1 existente**. Preserva o Babylon.js, os modelos de criaturas, os três modos, mineração e ciclo dia/noite. Não substitui o jogo por uma demonstração.
 
@@ -8,7 +8,7 @@ Este pacote parte do **Blockcraft 1.1.1 existente**. Preserva o Babylon.js, os m
 - Controles: Ctrl para correr e Shift para andar devagar/agachar (ainda sem reduzir fisicamente o collider).
 - Exportação de mundo para JSON e importação após confirmação, com validação básica e limite de 25 MB.
 - Salvamento automático e manual centralizados, com dados de progresso das fases.
-- Cabeçalho e versão atualizados para 1.2.
+- Cabeçalho e versão atualizados para 1.2.1.
 
 ## Limitações reconhecidas
 
