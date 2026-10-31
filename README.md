@@ -1,30 +1,19 @@
-# Blockcraft 1.1: Sons do Mundo
+# Blockcraft 1.1.1: Correção da câmera em primeira pessoa
 
-Efeitos sonoros **originais e procedurais** feitos com Web Audio API. O MP4 enviado serviu como referência de categorias de sons, mas nenhum áudio do Minecraft foi copiado, extraído ou distribuído.
+Corrige a faixa azul/retângulo que pode aparecer na frente da visão quando o avatar atravessa a câmera.
 
-Inclui: passos em grama, pedra, madeira e água; quebrar madeira, folhas, terra, pedra e minerais; colocar blocos; ataque e dano; saltos e pousos; bolhas subaquáticas; lava; transição de ambiente dia/noite; recompensa. Volume e mudo no HUD, preferências armazenadas localmente. O áudio inicia após clicar em Jogar devido às regras dos navegadores.
+- Cabeça, cabelo e braços do avatar ocultos na visão em primeira pessoa.
+- Pernas aparecem ao olhar para baixo.
+- Tronco só aparece ao olhar quase diretamente para os pés.
+- Braços/mãos animados de primeira pessoa permanecem visíveis.
+- Partes do avatar e mãos não interferem no raycast de mineração.
+- Terceira pessoa e a tecla V preservadas.
+- Demais recursos da versão 1.1 preservados.
 
-Sons de animais e monstros disponíveis no motor de áudio para futuras ações específicas, mas ainda não foram vinculados a todos os NPCs. Sons não foram avaliados por audição no Android.
+## Instalação
+Copie os arquivos para seu repositório e faça commit e push. Não é necessário excluir seus dados salvos.
 
-# Blockcraft 1.0 — Noite e Oceanos
+## Teste
+No navegador, abra o jogo, olhe em frente e depois para os pés. Verifique se a faixa desapareceu e as pernas ainda podem ser vistas ao olhar para baixo. Tecla V alterna para terceira pessoa.
 
-Base: Blockcraft 0.9.1.
-
-## Mudanças
-
-- Criaturas hostis comuns só aparecem no período noturno em Mundo Aberto. Ao amanhecer, são removidas.
-- Animais passivos e criaturas neutras permanecem no mapa.
-- No modo Fases, inimigos aparecem em qualquer horário porque fazem parte do desafio.
-- No Criativo, nenhuma criatura inicia ataques e não há afogamento.
-- Água com empuxo e resistência, movimento horizontal mais lento, natação ao segurar Espaço.
-- Controle esquerdo/direito: descer na água (teclado).
-- Indicador de ar (20 segundos). Respiração recuperada na superfície; dano por afogamento após esgotamento.
-- Mantidos três modos, 32 modelos de criaturas, árvores em blocos, câmera V e ciclo de dia/noite.
-
-## Limitações
-
-A simulação aquática é simplificada: não há correnteza, propagação dinâmica de líquidos, ondas físicas ou corpos rígidos flutuantes. O mundo apresenta água na região do nível do mar. A compilação Android não foi executada neste ambiente.
-
-## Publicação
-
-Copie o conteúdo deste pacote para a raiz do repositório, execute `git add -A`, `git commit -m "Blockcraft 1.0 - Agua e monstros noturnos"`, `git pull --rebase origin main` e `git push origin main`.
+**Nota:** código revisado e sintaxe verificada, sem teste gráfico automatizado em um navegador nesta entrega.
