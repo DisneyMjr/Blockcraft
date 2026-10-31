@@ -16,6 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+<<<<<<< HEAD
   web:
     runs-on: ubuntu-24.04
     container:
@@ -55,3 +56,19 @@ jobs:
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages
+=======
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar site
+        run: node scripts/build.mjs
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - uses: actions/deploy-pages@v4
+>>>>>>> 2737e05 (Blockcraft 0.3 - Babylon e camera alternavel)

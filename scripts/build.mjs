@@ -1,0 +1,1 @@
+import fs from 'node:fs';import path from 'node:path';const out='dist';fs.mkdirSync(out+'/assets',{recursive:true});for(const f of ['index.html','style.css','game.js','manifest.webmanifest'])fs.copyFileSync(f,path.join(out,f));for(const file of fs.readdirSync('assets'))fs.copyFileSync(path.join('assets',file),path.join(out,'assets',file));console.log('Web build preparado:',out);
