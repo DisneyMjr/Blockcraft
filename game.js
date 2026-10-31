@@ -28,8 +28,18 @@ function liquidAt(x,y,z){
  if(y>=0&&y<SEA_LEVEL+1.03&&y>heightAt(x,z)+.9&&getBlock(Math.floor(x),Math.floor(y),Math.floor(z))<0)return 'water';
  return null;
 }
-const CHUNK=12,RADIUS=2,world=new Map(),edits=new Map(),keys={},held={forward:0,right:0};let wood=0,saplings=0,sticks=0,fruit=0,coins=0,stars=0,stageIndex=0,stageWins={},npcKills=0,stageObjective=0,stageStartedAt=0,selected=0,camMode=0,started=false,char='angelo',mode='creative',yaw=0,pitch=.1,velocityY=0,grounded=false,attackAt=0,player={x:2,y:12,z:2},pointerDown=false;
-const stateKey='blockcraft_04_save';try{const saved=JSON.parse(localStorage.getItem(stateKey)||'{}');if(saved.edits)for(const [k,v] of Object.entries(saved.edits))edits.set(k,v);if(saved.player&&Number.isFinite(saved.player.x))player=saved.player; if(saved.coins)coins=saved.coins; if(saved.wood)wood=saved.wood; if(saved.saplings)saplings=saved.saplings; if(saved.sticks)sticks=saved.sticks; if(saved.fruit)fruit=saved.fruit; if(saved.stars)stars=saved.stars;}catch(e){}
+const CHUNK=12;let RADIUS=2;const world=new Map(),edits=new Map(),keys={},held={forward:0,right:0};let wood=0,saplings=0,sticks=0,fruit=0,coins=0,stars=0,stageIndex=0,stageWins={},npcKills=0,stageObjective=0,stageStartedAt=0,selected=0,camMode=0,started=false,char='angelo',mode='creative',yaw=0,pitch=.1,velocityY=0,grounded=false,attackAt=0,player={x:2,y:12,z:2},pointerDown=false;
+const stateKey='blockcraft_04_save';
+const settingsKey='blockcraft_settings_v1';
+let settings={renderDistance:2,mouseSensitivity:1,fov:66,dayMinutes:20};
+try{const v=JSON.parse(localStorage.getItem(settingsKey)||'{}');if(v&&typeof v==='object')settings={...settings,...v};}catch(e){}
+settings.renderDistance=Math.max(1,Math.min(3,Number(settings.renderDistance)||2));
+settings.mouseSensitivity=Math.max(.3,Math.min(2.5,Number(settings.mouseSensitivity)||1));
+settings.fov=Math.max(55,Math.min(90,Number(settings.fov)||66));
+settings.dayMinutes=Math.max(5,Math.min(40,Number(settings.dayMinutes)||20));
+RADIUS=settings.renderDistance;
+camera.fov=settings.fov*Math.PI/180;
+try{const saved=JSON.parse(localStorage.getItem(stateKey)||'{}');if(saved.edits)for(const [k,v] of Object.entries(saved.edits))edits.set(k,v);if(saved.player&&Number.isFinite(saved.player.x))player=saved.player; if(saved.coins)coins=saved.coins; if(saved.wood)wood=saved.wood; if(saved.saplings)saplings=saved.saplings; if(saved.sticks)sticks=saved.sticks; if(saved.fruit)fruit=saved.fruit; if(saved.stars)stars=saved.stars;}catch(e){}
 function hash(x,z){let q=Math.sin(x*127.1+z*311.7)*43758.5453;return q-Math.floor(q)}
 function heightAt(x,z){let h=4+Math.sin(x*.06)*2.2+Math.cos(z*.07)*2.2+Math.sin((x+z)*.14)*1.1+Math.sin(x*.22-z*.13)*.5;let continent=Math.sin(x*.012)*2.5+Math.cos(z*.016)*2.5+Math.sin((x+z)*.009)*2.2;return Math.max(1,Math.min(13,Math.floor(h+continent-1.6)))}
 function groundType(x,z){const h=heightAt(x,z);return h<4?6:0}
@@ -40,7 +50,12 @@ function createChunk(cx,cz){const groups=materials.map(()=>({p:[],n:[],i:[],uv:[
 const meshes=[];groups.forEach((g,t)=>{if(!g.i.length)return;let mesh=new BABYLON.Mesh(`chunk_${cx}_${cz}_${t}`,scene),vd=new BABYLON.VertexData();vd.positions=g.p;vd.indices=g.i;vd.normals=g.n;vd.uvs=g.uv;vd.applyToMesh(mesh);mesh.material=materials[t];mesh.isPickable=true;mesh.metadata={terrain:true};meshes.push(mesh)});addTrees(cx,cz,meshes);addWaters(cx,cz,meshes);return meshes}
 function updateWorld(){let cx=Math.floor(player.x/CHUNK),cz=Math.floor(player.z/CHUNK),layer=Math.floor((player.y-18)/DEEP_SEGMENT),needed=new Set();for(let dx=-RADIUS;dx<=RADIUS;dx++)for(let dz=-RADIUS;dz<=RADIUS;dz++){let a=cx+dx,b=cz+dz,k=`${a}:${b}`;needed.add(k);if(!world.has(k)||world.get(k)._layer!==layer){if(world.has(k))world.get(k).forEach(m=>m.dispose());const created=createChunk(a,b);created._layer=layer;world.set(k,created)}}for(const [k,meshes] of world)if(!needed.has(k)){for(let mesh of meshes)mesh.dispose();world.delete(k)}}
 function refreshAt(x,z){let cx=Math.floor(x/CHUNK),cz=Math.floor(z/CHUNK);for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){let k=`${cx+dx}:${cz+dz}`;if(world.has(k)){world.get(k).forEach(m=>m.dispose());{const created=createChunk(cx+dx,cz+dz);created._layer=Math.floor((player.y-18)/DEEP_SEGMENT);world.set(k,created)}}}}
-function save(){try{localStorage.setItem(stateKey,JSON.stringify({player,edits:Object.fromEntries(edits),coins,stars,wood,saplings,sticks,fruit,worldTime}));toast('Mundo salvo ✓')}catch(e){toast('Não foi possível salvar neste navegador')}}
+function stateSnapshot(){return {format:'blockcraft-save',schema:1,savedAt:new Date().toISOString(),player:{...player},edits:Object.fromEntries(edits),coins,stars,wood,saplings,sticks,fruit,worldTime,stageIndex,stageWins};}
+function save(silent=false){try{localStorage.setItem(stateKey,JSON.stringify(stateSnapshot()));if(!silent)toast('Mundo salvo ✓');return true;}catch(e){if(!silent)toast('Erro ao salvar: armazenamento indisponível');return false;}}
+function exportWorld(){if(!save())return;const data=JSON.stringify(stateSnapshot(),null,2);const a=document.createElement('a');const url=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.href=url;a.download='blockcraft-mundo-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('Cópia do mundo exportada');}
+async function importWorld(file){if(!file)return;try{if(file.size>25_000_000)throw new Error('Arquivo acima de 25 MB');const data=JSON.parse(await file.text());if(data.format!=='blockcraft-save'||data.schema!==1||!data.player||!Number.isFinite(data.player.x)||!Number.isFinite(data.player.y)||!Number.isFinite(data.player.z)||!data.edits||typeof data.edits!=='object'||Array.isArray(data.edits))throw new Error('Arquivo inválido');if(!confirm('Substituir o progresso atual pelo mundo importado? Esta ação não pode ser desfeita.'))return;localStorage.setItem(stateKey,JSON.stringify(data));location.reload();}catch(e){toast('Falha ao importar: '+e.message);}}
+function updateSettings(){const ids={renderDistance:'renderDistance',mouseSensitivity:'mouseSensitivity',fov:'fov',dayMinutes:'dayMinutes'};for(const [k,id]of Object.entries(ids)){const el=document.getElementById(id);if(el)settings[k]=Number(el.value);}RADIUS=settings.renderDistance;camera.fov=settings.fov*Math.PI/180;localStorage.setItem(settingsKey,JSON.stringify(settings));updateWorld();toast('Configurações aplicadas');}
+
 function toast(str){const e=$('#toast');e.textContent=str;e.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>e.style.display='none',2000)}
 function avatar(){const root=new BABYLON.TransformNode('avatar',scene);const skin=new BABYLON.StandardMaterial('pele',scene);skin.diffuseColor=new BABYLON.Color3(.93,.69,.49);const hair=new BABYLON.StandardMaterial('cabelo',scene);hair.diffuseColor=new BABYLON.Color3(.24,.14,.1);const shirt=new BABYLON.StandardMaterial('camisa',scene);shirt.diffuseColor=char==='angelo'?new BABYLON.Color3(.08,.17,.35):new BABYLON.Color3(.92,.87,.74);const pants=new BABYLON.StandardMaterial('calca',scene);pants.diffuseColor=char==='angelo'?new BABYLON.Color3(.18,.38,.61):new BABYLON.Color3(.86,.47,.58);function part(n,s,p,m){const a=BABYLON.MeshBuilder.CreateBox(n,{width:s[0],height:s[1],depth:s[2]},scene);a.position.set(...p);a.parent=root;a.material=m;a.isPickable=false;return a}part('torso',[.72,.85,.32],[0,1.1,0],shirt);part('cabeca',[.62,.62,.56],[0,1.85,0],skin);part('cabelo',[.66,char==='angelo'?.22:.4,.6],[0,2.2,0],hair);avatarParts.leftArm=part('bracoE',[.25,.7,.28],[-.5,1.07,0],skin);avatarParts.rightArm=part('bracoD',[.25,.7,.28],[.5,1.07,0],skin);avatarParts.leftLeg=part('pernaE',[.28,.75,.3],[-.2,.35,0],pants);avatarParts.rightLeg=part('pernaD',[.28,.75,.3],[.2,.35,0],pants);return root}
 let body=null;const avatarParts={};function setCharacter(v){char=v;if(body)body.dispose(false,true);body=avatar();createHands()}
@@ -136,10 +151,16 @@ function plantSapling(){
 
 const slots=[['Grama','#6fa143'],['Terra','#75513a'],['Pedra','#888991'],['Madeira','#bc9659'],['Folhas','#4d9b47']];slots.forEach(([name,color],i)=>{let el=document.createElement('button');el.className='slot'+(i===0?' active':'');el.innerHTML=`<span style="background:${color}"></span>${i+1} ${name}`;el.onclick=()=>select(i);$('#hotbar').appendChild(el)});function select(n){selected=n;document.querySelectorAll('.slot').forEach((e,i)=>e.classList.toggle('active',i===n))}
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyV'&&!e.repeat)toggleCam();if(e.code==='KeyR'&&!e.repeat)plantSapling();if(/^Digit[1-5]$/.test(e.code))select(Number(e.code.slice(-1))-1);if(e.code==='Space')e.preventDefault();});window.addEventListener('keyup',e=>keys[e.code]=false);
-canvas.addEventListener('click',()=>{if(!started)return;if(matchMedia('(pointer:fine)').matches&&!document.pointerLockElement)canvas.requestPointerLock?.()});document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){yaw+=e.movementX*.003;pitch=Math.max(-1.15,Math.min(1.1,pitch-e.movementY*.003))}});
+canvas.addEventListener('click',()=>{if(!started)return;if(matchMedia('(pointer:fine)').matches&&!document.pointerLockElement)canvas.requestPointerLock?.()});document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){yaw+=e.movementX*.003*settings.mouseSensitivity;pitch=Math.max(-1.15,Math.min(1.1,pitch-e.movementY*.003*settings.mouseSensitivity))}});
 canvas.addEventListener('mousedown',e=>{if(!started||e.target!==canvas)return;if(document.pointerLockElement===canvas){if(e.button===0)action('break');else if(e.button===2)action('place')}});canvas.addEventListener('contextmenu',e=>e.preventDefault());
-let lookTouch=null;canvas.addEventListener('touchstart',e=>{if(e.touches.length)lookTouch={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});canvas.addEventListener('touchmove',e=>{if(!lookTouch||!e.touches.length)return;const t=e.touches[0];yaw+=(t.clientX-lookTouch.x)*.005;pitch=Math.max(-1.15,Math.min(1.1,pitch-(t.clientY-lookTouch.y)*.005));lookTouch={x:t.clientX,y:t.clientY}},{passive:true});canvas.addEventListener('touchend',()=>lookTouch=null);
+let lookTouch=null;canvas.addEventListener('touchstart',e=>{if(e.touches.length)lookTouch={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});canvas.addEventListener('touchmove',e=>{if(!lookTouch||!e.touches.length)return;const t=e.touches[0];yaw+=(t.clientX-lookTouch.x)*.005*settings.mouseSensitivity;pitch=Math.max(-1.15,Math.min(1.1,pitch-(t.clientY-lookTouch.y)*.005*settings.mouseSensitivity));lookTouch={x:t.clientX,y:t.clientY}},{passive:true});canvas.addEventListener('touchend',()=>lookTouch=null);
 const pad=$('#pad'),knob=$('#knob');function movePad(e){const r=pad.getBoundingClientRect();let x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;let d=Math.max(1,Math.hypot(x,y)),k=Math.min(1,43/d);x*=k;y*=k;held.right=x/43;held.forward=-y/43;knob.style.transform=`translate(${x}px,${y}px)`}pad.addEventListener('pointerdown',e=>{pad.setPointerCapture(e.pointerId);movePad(e)});pad.addEventListener('pointermove',e=>{if(pad.hasPointerCapture(e.pointerId))movePad(e)});for(const evt of ['pointerup','pointercancel'])pad.addEventListener(evt,()=>{held.forward=held.right=0;knob.style.transform='' });
+const optionsPanel=document.getElementById('optionsPanel');
+for(const k of ['renderDistance','mouseSensitivity','fov','dayMinutes']){const e=document.getElementById(k);if(e)e.value=settings[k];}
+document.getElementById('optionsToggle').onclick=()=>{optionsPanel.hidden=!optionsPanel.hidden;};
+document.getElementById('settingsApply').onclick=updateSettings;
+document.getElementById('exportWorld').onclick=exportWorld;
+document.getElementById('importWorld').onchange=e=>{importWorld(e.target.files?.[0]);e.target.value='';};
 $('#jump').addEventListener('pointerdown',()=>keys.Space=true);['pointerup','pointercancel'].forEach(n=>$('#jump').addEventListener(n,()=>keys.Space=false));$('#break').onclick=()=>action('break');$('#place').onclick=()=>action('place');$('#cameraBtn').onclick=toggleCam;$('#saveBtn').onclick=save;const soundBtn=$('#soundBtn'),soundVolume=$('#soundVolume');if(soundBtn){soundBtn.textContent=sounds.muted?'🔇 Som':'🔊 Som';soundBtn.onclick=()=>{soundBtn.textContent=sounds.toggle()?'🔊 Som':'🔇 Som';}}if(soundVolume){soundVolume.value=Math.round(sounds.volume*100);soundVolume.oninput=()=>{sounds.unlock();sounds.setVolume(Number(soundVolume.value)/100);};}
 const plantButton=document.createElement('button');plantButton.textContent='🌱 Plantar';plantButton.title='Plantar muda (R)';plantButton.style.cssText='position:fixed;right:12px;bottom:158px;z-index:40;padding:10px 12px;border-radius:12px;background:#2c7647;color:white;border:2px solid #9fe0a2;font-weight:bold;display:none';document.body.appendChild(plantButton);plantButton.onclick=plantSapling;
 $('#bobBtn').onclick=()=>{viewBobLevel=viewBobLevel===1?.45:viewBobLevel===.45?0:1;$('#bobBtn').textContent='Passos: '+(viewBobLevel===1?'Normal':viewBobLevel===.45?'Leve':'Off');};
@@ -242,7 +263,7 @@ function addTrees(cx,cz,meshes){
   }
  }
 }
-let npcs=[],life=100,air=20,damageScreen=0,lastHostileRefresh=0;const MAX_AIR=20,DROWN_DAMAGE=16,DAY_SECONDS=720;const skyDay=new BABYLON.Color3(.46,.72,.96),skyNight=new BABYLON.Color3(.018,.027,.09),skyDusk=new BABYLON.Color3(.86,.36,.27);let worldTime=.24;try{const st=JSON.parse(localStorage.getItem(stateKey)||'{}');if(Number.isFinite(st.worldTime))worldTime=st.worldTime;}catch(e){}
+let npcs=[],life=100,air=20,damageScreen=0,lastHostileRefresh=0;const MAX_AIR=20,DROWN_DAMAGE=16;const skyDay=new BABYLON.Color3(.46,.72,.96),skyNight=new BABYLON.Color3(.018,.027,.09),skyDusk=new BABYLON.Color3(.86,.36,.27);let worldTime=.24;try{const st=JSON.parse(localStorage.getItem(stateKey)||'{}');if(Number.isFinite(st.worldTime))worldTime=st.worldTime;}catch(e){}
 function makeNPC(def,x,z,isBoss=false){
  const model=window.criarMonstroBlockcraft(scene,def);
  const root=model.root;
@@ -342,7 +363,7 @@ function updateWaterPhysics(dt){
 }
 function clamp01(v){return Math.max(0,Math.min(1,v))}
 function updateDayNight(dt){
- worldTime=(worldTime+dt/DAY_SECONDS)%1;
+ worldTime=(worldTime+dt/(settings.dayMinutes*60))%1;
  // 0.25 = nascer do sol; 0.5 = meio-dia; 0.75 = por do sol; 0 = meia-noite.
  const angle=(worldTime-.25)*Math.PI*2,altitude=Math.sin(angle),day=clamp01((altitude+.12)/.38),twilight=clamp01(1-Math.abs(altitude)/.30)*(altitude>-.18?1:.5);
  const sky=BABYLON.Color3.Lerp(skyNight,skyDay,day);sky.r=sky.r*(1-twilight*.48)+skyDusk.r*twilight*.48;sky.g=sky.g*(1-twilight*.48)+skyDusk.g*twilight*.48;sky.b=sky.b*(1-twilight*.48)+skyDusk.b*twilight*.48;
@@ -393,7 +414,7 @@ engine.runRenderLoop(()=>{
  if(started){
   const f0=(keys.KeyW?1:0)-(keys.KeyS?1:0)+held.forward,r0=(keys.KeyD?1:0)-(keys.KeyA?1:0)+held.right;
   const len=Math.max(1,Math.hypot(f0,r0));let f=f0/len,r=r0/len;
-  const running=keys.ShiftLeft||keys.ShiftRight,speed=(running?6.6:4.35)*(liquidAt(Math.floor(player.x),Math.floor(player.y+.5),Math.floor(player.z))==='water'?.48:1);
+  const crouch=keys.ShiftLeft||keys.ShiftRight,running=(keys.ControlLeft||keys.ControlRight)&&!crouch,speed=(crouch?2.05:running?6.6:4.35)*(liquidAt(Math.floor(player.x),Math.floor(player.y+.5),Math.floor(player.z))==='water'?.48:1);
   const dx=(Math.sin(yaw)*f+Math.cos(yaw)*r)*speed*dt,dz=(Math.cos(yaw)*f-Math.sin(yaw)*r)*speed*dt;
   // Primeiro movimentação horizontal com colisão nas paredes.
   tryMoveAxis('x',dx);tryMoveAxis('z',dz);
@@ -433,10 +454,10 @@ engine.runRenderLoop(()=>{
   cameraUpdate(dt);
   if(now-lastChunk>450){updateWorld();$('#coords').textContent=`X ${Math.floor(player.x)} · Y ${Math.floor(player.y)} · Z ${Math.floor(player.z)} · ${camMode?'3ª':'1ª'} pessoa`;lastChunk=now;}
   if(now-lastAI>85){updateNPCs(Math.min(.15,(now-lastAI)/1000),now);lastAI=now;}if(now-lastCreatureSound>6500&&npcs.length){const close=npcs.find(n=>Math.hypot(n.x-player.x,n.z-player.z)<13);if(close){sounds.play((close.def.tipo==='hostil'||close.def.tipo==='chefe')?'monster':'animal');lastCreatureSound=now;}}
-  if(now-lastSave>30000){try{localStorage.setItem(stateKey,JSON.stringify({player,edits:Object.fromEntries(edits),coins,stars,wood,saplings,sticks,fruit,worldTime}))}catch(e){}lastSave=now;}
+  if(now-lastSave>30000){save(true);lastSave=now;}
  }
  updateDayNight(started?dt:0);
  scene.render();
 });
-window.addEventListener('resize',()=>engine.resize());window.addEventListener('beforeunload',()=>{if(started)try{localStorage.setItem(stateKey,JSON.stringify({player,edits:Object.fromEntries(edits),coins,stars,wood,saplings,sticks,fruit,worldTime}))}catch(e){}});
+window.addEventListener('resize',()=>engine.resize());window.addEventListener('beforeunload',()=>{if(started)save(true)});
 })();
