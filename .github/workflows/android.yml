@@ -45,6 +45,11 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Bloquear orientacao horizontal no Android
+        run: |
+          python3 scripts/set_android_landscape.py android/app/src/main/AndroidManifest.xml
+          grep -n 'screenOrientation="landscape"' android/app/src/main/AndroidManifest.xml
+
       - name: Compilar APK de teste
         working-directory: android
         run: |
@@ -54,6 +59,6 @@ jobs:
       - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
-          name: Blockcraft-0.4-Android-debug
+          name: Blockcraft-1.2.2-Android-debug
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error

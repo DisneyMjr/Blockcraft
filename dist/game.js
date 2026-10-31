@@ -67,14 +67,15 @@ const damp=(from,to,speed,dt)=>from+(to-from)*(1-Math.exp(-speed*dt));
 function createHands(){if(handRig)handRig.dispose(false,true);handRig=new BABYLON.TransformNode('maos_primeira_pessoa',scene);handArms=[];handRig.parent=camera;const sm=new BABYLON.StandardMaterial('pele_maos',scene);sm.diffuseColor=new BABYLON.Color3(.92,.66,.44);const sleeve=new BABYLON.StandardMaterial('manga_maos',scene);sleeve.diffuseColor=char==='angelo'?new BABYLON.Color3(.06,.16,.42):new BABYLON.Color3(.86,.79,.75);for(let side of [-1,1]){const arm=BABYLON.MeshBuilder.CreateBox('antebraco',{width:.21,height:.21,depth:.54},scene);arm.parent=handRig;arm.position.set(side*.40,-.48,1.1);arm.rotation.x=-.3;arm.material=sleeve;arm.isPickable=false;handArms.push(arm);const fist=BABYLON.MeshBuilder.CreateBox('mao',{width:.20,height:.20,depth:.25},scene);fist.parent=arm;fist.position.z=.34;fist.material=sm;fist.isPickable=false;}handRig.setEnabled(camMode===0)}
 function cameraUpdate(dt){let dir=new BABYLON.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));let eye=new BABYLON.Vector3(player.x,player.y+1.58,player.z);if(handRig){handRig.setEnabled(camMode===0);}
  if(camMode===0){body.setEnabled(true);
- // Evita que o tronco e as partes do avatar atravessem o plano da camera.
- // O corpo aparece somente ao olhar para baixo; as maos sao independentes.
- const lookingDown = pitch < -0.52;
+ // Primeira pessoa limpa: nao renderizar tronco/cabeca para evitar a faixa azul.
+ // Mostrar apenas as pernas, e so quando o jogador olha bem para baixo.
+ const lookingDown = pitch < -0.92;
  for(const m of body.getChildMeshes()){
-  if(m.name==='cabeca'||m.name==='cabelo'||m.name==='bracoE'||m.name==='bracoD')m.isVisible=false;
-  else if(m.name==='torso')m.isVisible=pitch < -0.85;
-  else if(m.name==='pernaE'||m.name==='pernaD')m.isVisible=lookingDown;
-  else m.isVisible=false;
+  if(m.name==='pernaE'||m.name==='pernaD'){
+   m.isVisible=lookingDown;
+  }else{
+   m.isVisible=false;
+  }
  }
  // O balanco da cabeca acompanha o movimento real e desacelera quando o jogador para.
  eye.y+=Math.abs(Math.sin(stepPhase))*0.075*bobBlend*viewBobLevel-landingKick*.095*viewBobLevel-impactStrength*.05;
@@ -88,7 +89,7 @@ function cameraUpdate(dt){let dir=new BABYLON.Vector3(Math.sin(yaw)*Math.cos(pit
   handRig.position.y=-Math.abs(Math.sin(stepPhase))*.038*bobBlend*viewBobLevel+landingKick*.08*viewBobLevel;
   handRig.rotation.z=Math.sin(stepPhase)*.025*bobBlend*viewBobLevel;
   handRig.rotation.x= -Math.sin(Math.min(1,(performance.now()-swingTime)/340)*Math.PI)*.12;}
- body.position.set(player.x,player.y,player.z);body.rotation.y=yaw}
+ if(camMode===0){body.position.set(player.x,player.y-0.08,player.z);}else{body.position.set(player.x,player.y,player.z);}body.rotation.y=yaw}
 function toggleCam(){camMode=1-camMode;toast(camMode?'Terceira pessoa':'Primeira pessoa')}
 function cast(){
  const hit=scene.pick(engine.getRenderWidth()/2,engine.getRenderHeight()/2,m=>m.metadata?.terrain||m.metadata?.treeBlock,false,camera);

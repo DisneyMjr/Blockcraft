@@ -30,3 +30,9 @@ Use um servidor estático (ex.: `python -m http.server 8080` no diretório e abr
 3. Migrar persistência para IndexedDB com migração e validação de backup.
 4. Modelo de fluido por células, IA com navegação e controles por bioma/luz.
 5. Inventário/crafting/progressão e testes automatizados de gameplay.
+
+
+## 1.2.2 - Orientacao horizontal
+- Android: a etapa `Bloquear orientacao horizontal no Android` no GitHub Actions altera o AndroidManifest.xml gerado pelo Capacitor e fixa `android:screenOrientation="landscape"` na Activity.
+- Web: em celulares no modo retrato, um aviso instrui girar o aparelho. Navegadores nao garantem bloqueio de orientacao fora de tela cheia.
+- Na pasta do projeto, execute `npm run build` antes de publicar `dist/`.

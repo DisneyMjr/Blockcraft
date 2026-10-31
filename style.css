@@ -5,3 +5,9 @@
 #air{font-size:12px;padding:5px 9px;border-radius:9px;background:rgba(0,24,48,.82);border:1px solid #3fc7eb;align-items:center;white-space:nowrap;font-weight:700}
 
 #optionsPanel{position:fixed;right:12px;top:76px;z-index:120;width:min(320px,calc(100vw - 24px));max-height:75vh;overflow:auto;background:#102334ed;border:1px solid #78a3b5;border-radius:14px;padding:15px;color:#fff;box-shadow:0 12px 40px #0009;font:14px Arial,sans-serif}#optionsPanel[hidden]{display:none}#optionsPanel label{display:block;margin:12px 0;font-size:13px}#optionsPanel input:not([type=file]),#optionsPanel select{width:100%;margin-top:5px;padding:6px;background:#193b52;color:#fff;border:1px solid #739cb0;border-radius:7px}#optionsPanel button,#optionsPanel .import-label{display:inline-block;background:#245c76;color:white;padding:8px;border-radius:8px;margin:4px;cursor:pointer;border:1px solid #8fd6e9}#optionsPanel .import-label input{display:block;width:100%;font-size:11px}#optionsPanel p{font-size:12px;color:#b9ced9;line-height:1.4}
+
+/* Orientacao para navegador mobile: nao bloqueia o sistema, orienta usuario. */
+#rotateNotice{display:none;position:fixed;inset:0;z-index:9999;background:#091a30;color:#fff;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;font:18px Arial,sans-serif}
+#rotateNotice strong{font-size:25px}#rotateNotice p{font-size:15px;line-height:1.5;max-width:280px;color:#bdd7ec}
+.rotatePhone{font-size:64px;margin-bottom:10px;color:#ffd65e}
+@media (orientation:portrait) and (pointer:coarse){#rotateNotice{display:flex}}
