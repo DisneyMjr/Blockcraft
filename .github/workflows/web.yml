@@ -1,10 +1,10 @@
-
 name: Publicar Blockcraft Web
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -12,63 +12,39 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: blockcraft-pages
   cancel-in-progress: true
 
 jobs:
-<<<<<<< HEAD
   web:
     runs-on: ubuntu-24.04
-    container:
-      image: barichello/godot-ci:4.4.1
-
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Baixar projeto
         uses: actions/checkout@v4
 
-      - name: Preparar Godot
-        run: |
-          mkdir -p ~/.local/share/godot/export_templates
-          cp -r /root/.local/share/godot/export_templates/4.4.1.stable ~/.local/share/godot/export_templates/
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-      - name: Importar recursos do jogo
+      - name: Gerar arquivos Web
         run: |
-          godot --headless --path . --editor --import
-
-      - name: Exportar jogo para navegador
-        run: |
-          mkdir -p build/web
-          godot --headless --path . --export-release "Web" build/web/index.html
-          test -s build/web/index.html
-          test -n "$(find build/web -name '*.wasm' -print -quit)"
-          touch build/web/.nojekyll
+          node scripts/build.mjs
+          test -s dist/index.html
+          test -s dist/game.js
+          touch dist/.nojekyll
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Enviar arquivos da versao Web
+      - name: Enviar site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build/web
+          path: dist
 
-      - name: Publicar jogo
+      - name: Publicar
         id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          artifact_name: github-pages
-=======
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Preparar site
-        run: node scripts/build.mjs
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-      - uses: actions/deploy-pages@v4
->>>>>>> 2737e05 (Blockcraft 0.3 - Babylon e camera alternavel)

@@ -1,0 +1,13 @@
+BLOCKCRAFT 0.3.1 | CORRECAO GITHUB ACTIONS
+
+1. Copie os arquivos desta pasta PARA A RAIZ do repositorio Blockcraft (nao copie a pasta inteira).
+2. Exclua arquivos antigos Godot: project.godot, export_presets.cfg, pastas scenes, scripts de Godot e workflows antigos que exportem Godot. CUIDADO: mantenha scripts/build.mjs, usado pelo Babylon.
+3. GitHub > Settings > Pages > Source: GitHub Actions.
+4. Execute no PowerShell, na pasta Git do projeto:
+   git add -A
+   git commit -m "Blockcraft 0.3.1 - Corrige Web e Android Babylon"
+   git pull --rebase origin main
+   git push origin main
+5. No GitHub Actions, acompanhe Publicar Blockcraft Web e Gerar APK Blockcraft Babylon.
+
+A compilacao Android gera APK DEBUG. O jogo carrega Babylon.js a partir de CDN, entao necessita internet.

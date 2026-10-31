@@ -1,34 +1,59 @@
 name: Gerar APK Blockcraft Babylon
+
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+
 permissions:
   contents: read
+
 jobs:
-  apk:
-    runs-on: ubuntu-latest
+  android:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - uses: actions/setup-java@v4
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-      - uses: android-actions/setup-android@v4
+
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
       - name: Instalar dependencias
         run: npm install --no-audit --no-fund
-      - name: Gerar site e projeto Android
+
+      - name: Gerar Web para Capacitor
         run: |
           npm run build
+          test -s dist/index.html
+
+      - name: Criar projeto Android
+        run: |
           npx cap add android
           npx cap sync android
-      - name: Gerar APK debug
+
+      - name: Compilar APK de teste
+        working-directory: android
         run: |
-          cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Publicar APK
+        uses: actions/upload-artifact@v4
         with:
-          name: Blockcraft-0.3-APK-debug
+          name: Blockcraft-0.3.1-Android-debug
           path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
