@@ -59,6 +59,6 @@ jobs:
       - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
-          name: Blockcraft-1.2.2-Android-debug
+          name: Blockcraft-1.2.3-Android-debug
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error

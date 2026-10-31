@@ -1,7 +1,7 @@
 /* Blockcraft 0.7 Mundo Vivo | Babylon.js */
 (()=>{'use strict';
 const $=s=>document.querySelector(s),canvas=$('#renderCanvas');const sounds=window.BlockcraftAudio||{unlock(){},play(){},step(){},ambience(){},toggle(){return true},setVolume(){},get muted(){return false},get volume(){return .58}};if(!window.BABYLON){alert('É necessária conexão para carregar Babylon.js.');return;}
-const engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,antialias:true});engine.setHardwareScalingLevel(Math.max(1,Math.min(1.65,devicePixelRatio/1.5)));
+const engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:true,antialias:true});engine.setHardwareScalingLevel(Math.max(1,Math.min(2.2,(window.matchMedia('(pointer:coarse)').matches?devicePixelRatio/1.05:devicePixelRatio/1.5))));
 const scene=new BABYLON.Scene(engine);scene.clearColor=new BABYLON.Color4(.47,.74,.94,1);scene.fogMode=BABYLON.Scene.FOGMODE_EXP2;scene.fogDensity=.006;scene.fogColor=new BABYLON.Color3(.52,.75,.92);scene.ambientColor=new BABYLON.Color3(.25,.3,.38);
 const camera=new BABYLON.FreeCamera('camera',new BABYLON.Vector3(0,10,-8),scene);camera.minZ=.06;camera.maxZ=200;camera.fov=1.15;scene.activeCamera=camera;
 const light=new BABYLON.HemisphericLight('ambiente',new BABYLON.Vector3(.3,1,.5),scene);light.intensity=.95;const sun=new BABYLON.DirectionalLight('sol',new BABYLON.Vector3(-.45,-1,-.35),scene);sun.intensity=.75;const moon=new BABYLON.DirectionalLight('lua',new BABYLON.Vector3(.3,-1,.3),scene);moon.intensity=0;const sunDisc=BABYLON.MeshBuilder.CreateSphere('discoSolar',{diameter:6,segments:12},scene);const sunMat=new BABYLON.StandardMaterial('brilhoSol',scene);sunMat.disableLighting=true;sunMat.emissiveColor=new BABYLON.Color3(1,.86,.55);sunDisc.material=sunMat;sunDisc.isPickable=false;sunDisc.alwaysSelectAsActiveMesh=true;const moonDisc=BABYLON.MeshBuilder.CreateSphere('discoLunar',{diameter:4,segments:12},scene);const moonMat=new BABYLON.StandardMaterial('brilhoLua',scene);moonMat.disableLighting=true;moonMat.emissiveColor=new BABYLON.Color3(.66,.77,1);moonDisc.material=moonMat;moonDisc.isPickable=false;moonDisc.alwaysSelectAsActiveMesh=true;
@@ -64,12 +64,12 @@ let handRig=null,handArms=[];let swingTime=0;let impactStrength=0;let lastVertic
 let stepPhase=0,bobBlend=0,landingKick=0,airborne=false,viewBobLevel=1;
 const damp=(from,to,speed,dt)=>from+(to-from)*(1-Math.exp(-speed*dt));
 
-function createHands(){if(handRig)handRig.dispose(false,true);handRig=new BABYLON.TransformNode('maos_primeira_pessoa',scene);handArms=[];handRig.parent=camera;const sm=new BABYLON.StandardMaterial('pele_maos',scene);sm.diffuseColor=new BABYLON.Color3(.92,.66,.44);const sleeve=new BABYLON.StandardMaterial('manga_maos',scene);sleeve.diffuseColor=char==='angelo'?new BABYLON.Color3(.06,.16,.42):new BABYLON.Color3(.86,.79,.75);for(let side of [-1,1]){const arm=BABYLON.MeshBuilder.CreateBox('antebraco',{width:.21,height:.21,depth:.54},scene);arm.parent=handRig;arm.position.set(side*.40,-.48,1.1);arm.rotation.x=-.3;arm.material=sleeve;arm.isPickable=false;handArms.push(arm);const fist=BABYLON.MeshBuilder.CreateBox('mao',{width:.20,height:.20,depth:.25},scene);fist.parent=arm;fist.position.z=.34;fist.material=sm;fist.isPickable=false;}handRig.setEnabled(camMode===0)}
+function createHands(){if(handRig)handRig.dispose(false,true);handRig=new BABYLON.TransformNode('maos_primeira_pessoa',scene);handArms=[];handRig.parent=camera;const sm=new BABYLON.StandardMaterial('pele_maos',scene);sm.diffuseColor=new BABYLON.Color3(.92,.66,.44);const sleeve=new BABYLON.StandardMaterial('manga_maos',scene);sleeve.diffuseColor=char==='angelo'?new BABYLON.Color3(.06,.16,.42):new BABYLON.Color3(.86,.79,.75);for(let side of [-1,1]){const arm=BABYLON.MeshBuilder.CreateBox('antebraco',{width:.14,height:.16,depth:.37},scene);arm.parent=handRig;arm.position.set(side*.29,-.65,.85);arm.rotation.x=-.3;arm.material=sleeve;arm.isPickable=false;handArms.push(arm);const fist=BABYLON.MeshBuilder.CreateBox('mao',{width:.14,height:.15,depth:.17},scene);fist.parent=arm;fist.position.z=.22;fist.material=sm;fist.isPickable=false;}handRig.setEnabled(camMode===0)}
 function cameraUpdate(dt){let dir=new BABYLON.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));let eye=new BABYLON.Vector3(player.x,player.y+1.58,player.z);if(handRig){handRig.setEnabled(camMode===0);}
  if(camMode===0){body.setEnabled(true);
  // Primeira pessoa limpa: nao renderizar tronco/cabeca para evitar a faixa azul.
  // Mostrar apenas as pernas, e so quando o jogador olha bem para baixo.
- const lookingDown = pitch < -0.92;
+ const lookingDown = false; // mobile: manter camera limpa; maos continuam visiveis
  for(const m of body.getChildMeshes()){
   if(m.name==='pernaE'||m.name==='pernaD'){
    m.isVisible=lookingDown;
@@ -154,8 +154,8 @@ const slots=[['Grama','#6fa143'],['Terra','#75513a'],['Pedra','#888991'],['Madei
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyV'&&!e.repeat)toggleCam();if(e.code==='KeyR'&&!e.repeat)plantSapling();if(/^Digit[1-5]$/.test(e.code))select(Number(e.code.slice(-1))-1);if(e.code==='Space')e.preventDefault();});window.addEventListener('keyup',e=>keys[e.code]=false);
 canvas.addEventListener('click',()=>{if(!started)return;if(matchMedia('(pointer:fine)').matches&&!document.pointerLockElement)canvas.requestPointerLock?.()});document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){yaw+=e.movementX*.003*settings.mouseSensitivity;pitch=Math.max(-1.15,Math.min(1.1,pitch-e.movementY*.003*settings.mouseSensitivity))}});
 canvas.addEventListener('mousedown',e=>{if(!started||e.target!==canvas)return;if(document.pointerLockElement===canvas){if(e.button===0)action('break');else if(e.button===2)action('place')}});canvas.addEventListener('contextmenu',e=>e.preventDefault());
-let lookTouch=null;canvas.addEventListener('touchstart',e=>{if(e.touches.length)lookTouch={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});canvas.addEventListener('touchmove',e=>{if(!lookTouch||!e.touches.length)return;const t=e.touches[0];yaw+=(t.clientX-lookTouch.x)*.005*settings.mouseSensitivity;pitch=Math.max(-1.15,Math.min(1.1,pitch-(t.clientY-lookTouch.y)*.005*settings.mouseSensitivity));lookTouch={x:t.clientX,y:t.clientY}},{passive:true});canvas.addEventListener('touchend',()=>lookTouch=null);
-const pad=$('#pad'),knob=$('#knob');function movePad(e){const r=pad.getBoundingClientRect();let x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;let d=Math.max(1,Math.hypot(x,y)),k=Math.min(1,43/d);x*=k;y*=k;held.right=x/43;held.forward=-y/43;knob.style.transform=`translate(${x}px,${y}px)`}pad.addEventListener('pointerdown',e=>{pad.setPointerCapture(e.pointerId);movePad(e)});pad.addEventListener('pointermove',e=>{if(pad.hasPointerCapture(e.pointerId))movePad(e)});for(const evt of ['pointerup','pointercancel'])pad.addEventListener(evt,()=>{held.forward=held.right=0;knob.style.transform='' });
+let lookTouch=null;canvas.addEventListener('touchstart',e=>{if(e.touches.length){const t=e.touches[0];lookTouch={x:t.clientX,y:t.clientY}}},{passive:true});canvas.addEventListener('touchmove',e=>{if(!lookTouch||!e.touches.length)return;const t=e.touches[0];yaw+=(t.clientX-lookTouch.x)*.005*settings.mouseSensitivity;pitch=Math.max(-1.15,Math.min(1.1,pitch-(t.clientY-lookTouch.y)*.005*settings.mouseSensitivity));lookTouch={x:t.clientX,y:t.clientY}},{passive:true});canvas.addEventListener('touchend',()=>lookTouch=null);
+const pad=$('#pad'),knob=$('#knob');function movePad(e){e.preventDefault();const r=pad.getBoundingClientRect();let x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;let d=Math.max(1,Math.hypot(x,y)),k=Math.min(1,43/d);x*=k;y*=k;held.right=x/43;held.forward=-y/43;knob.style.transform=`translate(${x}px,${y}px)`}pad.addEventListener('pointerdown',e=>{pad.setPointerCapture(e.pointerId);movePad(e)});pad.addEventListener('pointermove',e=>{if(pad.hasPointerCapture(e.pointerId))movePad(e)});for(const evt of ['pointerup','pointercancel'])pad.addEventListener(evt,()=>{held.forward=held.right=0;knob.style.transform='' });pad.addEventListener('lostpointercapture',()=>{held.forward=0;held.right=0;knob.style.transform='';});
 const optionsPanel=document.getElementById('optionsPanel');
 for(const k of ['renderDistance','mouseSensitivity','fov','dayMinutes']){const e=document.getElementById(k);if(e)e.value=settings[k];}
 document.getElementById('optionsToggle').onclick=()=>{optionsPanel.hidden=!optionsPanel.hidden;};
@@ -388,7 +388,19 @@ function updateMission(){if(mode!=='stages')return;let target=stageIndex%5===4?1
 for(let wi=0;wi<worldsDef.length;wi++)for(let li=0;li<5;li++){let opt=document.createElement('option');opt.value=wi*5+li;opt.textContent=`${wi*5+li+1}. ${worldsDef[wi][0]}: ${worldsDef[wi][1][li]}`;$('#stageSelect').appendChild(opt);}
 $('#mode').addEventListener('change',()=>{$('#stagePicker').style.display=$('#mode').value==='stages'?'flex':'none';});
 
-function start(){sounds.unlock();started=true;air=MAX_AIR;mode=$('#mode').value;stageIndex=Number($('#stageSelect').value||0);npcKills=0;stageObjective=0;stageStartedAt=performance.now();setCharacter($('#character').value);if(mode==='stages'){player={x:2,y:12,z:2};edits.clear();stageSetup();}player.y=Math.max(player.y,heightAt(Math.floor(player.x),Math.floor(player.z))+2);velocityY=0;grounded=false;updateWorld();$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden');plantButton.style.display='block';toast(mode==='stages'?'Complete a missão para liberar a próxima fase!':'V alterna a câmera • Explore e construa!')};$('#start').onclick=start;
+function start(){sounds.unlock();started=true;air=MAX_AIR;mode=$('#mode').value;stageIndex=Number($('#stageSelect').value||0);npcKills=0;stageObjective=0;stageStartedAt=performance.now();setCharacter($('#character').value);if(mode==='stages'){player={x:2,y:12,z:2};edits.clear();stageSetup();}// Recupera o personagem se o save antigo o deixou dentro de terreno/objetos.
+ const px=Math.floor(player.x),pz=Math.floor(player.z);
+ if(!Number.isFinite(player.y)||collidesAt(player.x,player.y,player.z)||player.y<heightAt(px,pz)-1){
+   let ok=false;
+   for(let rad=0;rad<=7&&!ok;rad++)for(let ax=-rad;ax<=rad&&!ok;ax++)for(let az=-rad;az<=rad&&!ok;az++){
+     const x=px+ax,z=pz+az,y=heightAt(x,z)+1.15;
+     if(!collidesAt(x+.5,y,z+.5)&&!collidesAt(x+.5,y+.6,z+.5)){
+       player.x=x+.5;player.z=z+.5;player.y=y;ok=true;
+     }
+   }
+   if(!ok){player.x=2.5;player.z=2.5;player.y=heightAt(2,2)+3;}
+ }
+ velocityY=0;grounded=false;updateWorld();$('#menu').classList.add('hidden');$('#hud').classList.remove('hidden');plantButton.style.display='block';toast(mode==='stages'?'Complete a missão para liberar a próxima fase!':'V alterna a câmera • Explore e construa!')};$('#start').onclick=start;
 // Colisão física em células reais: remover blocos elimina o suporte do jogador.
 // player.y representa a sola dos pés. O corpo ocupa 0.52 x 1.8 blocos.
 const BODY_RADIUS=.27,BODY_HEIGHT=1.8,GRAVITY=22,JUMP_SPEED=8.2,TERMINAL_SPEED=32,STEP_HEIGHT=.48;
@@ -407,7 +419,7 @@ function tryMoveAxis(axis,amount){if(Math.abs(amount)<1e-8)return;
  let nx=player.x+(axis==='x'?amount:0),nz=player.z+(axis==='z'?amount:0);
  if(!collidesAt(nx,player.y,nz)){player.x=nx;player.z=nz;return;}
  if(grounded&&velocityY<=0){const stepY=player.y+STEP_HEIGHT;
-  if(!collidesAt(nx,stepY,nz)&&groundLevel(nx,nz,stepY,.02)>=player.y){player.x=nx;player.z=nz;player.y=stepY;grounded=false;velocityY=0;}}
+  if(!collidesAt(nx,stepY,nz)&&groundLevel(nx,nz,stepY,.02)>player.y+.03){player.x=nx;player.z=nz;player.y=stepY;grounded=false;velocityY=0;}}
 }
 let last=performance.now(),lastChunk=0,lastSave=0,lastAI=0,lastCreatureSound=0,wasSwimming=false;
 engine.runRenderLoop(()=>{
@@ -450,7 +462,7 @@ engine.runRenderLoop(()=>{
   const mining=Math.max(0,1-(now-swingTime)/310);handArms.forEach((arm,i)=>{
     const strike=i===1?Math.sin(mining*Math.PI):.15*Math.sin(mining*Math.PI);
     arm.rotation.x=-.3+Math.sin(stepPhase+i*Math.PI)*.21*bobBlend-strike*1.15;
-    arm.position.z=1.10-(strike*.24);arm.position.y=-.48+.06*Math.sin(stepPhase+i*Math.PI)*bobBlend;
+    arm.position.z=.85-(strike*.14);arm.position.y=-.65+.04*Math.sin(stepPhase+i*Math.PI)*bobBlend;
   });
   cameraUpdate(dt);
   if(now-lastChunk>450){updateWorld();$('#coords').textContent=`X ${Math.floor(player.x)} · Y ${Math.floor(player.y)} · Z ${Math.floor(player.z)} · ${camMode?'3ª':'1ª'} pessoa`;lastChunk=now;}

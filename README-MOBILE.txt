@@ -1,0 +1,1 @@
+Blockcraft 1.2.3 Mobile: correcao visual dos controles touchscreen, maos menores, recuperacao de spawn dentro de blocos, joystick e resolucao adaptativa. O jogo depende de internet para carregar Babylon.js. Teste em aparelho real antes de publicar. Preserve seu mundo usando Exportar Mundo em Opcoes.
