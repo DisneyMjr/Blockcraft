@@ -1,0 +1,1 @@
+Blockcraft 0.4.1: corrigido o sinal horizontal do mouse e toque no game.js. Copie todos os arquivos para a raiz do repositório Blockcraft. Depois: git add -A; git commit -m "Corrige direcao horizontal da camera"; git pull --rebase origin main; git push origin main.
