@@ -1,1 +1,21 @@
-{"name":"Blockcraft: Ângelo e Valentina","short_name":"Blockcraft","start_url":"./","display":"standalone","background_color":"#142437","theme_color":"#142437","icons":[{"src":"assets/icon192.png","sizes":"192x192","type":"image/png"},{"src":"assets/icon512.png","sizes":"512x512","type":"image/png"}]}
+{
+  "name": "Blockcraft: Ângelo e Valentina",
+  "short_name": "Blockcraft",
+  "start_url": "./",
+  "display": "fullscreen",
+  "background_color": "#142437",
+  "theme_color": "#142437",
+  "icons": [
+    {
+      "src": "assets/icon192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "landscape"
+}

@@ -50,6 +50,11 @@ jobs:
           python3 scripts/set_android_landscape.py android/app/src/main/AndroidManifest.xml
           grep -n 'screenOrientation="landscape"' android/app/src/main/AndroidManifest.xml
 
+      - name: Ativar fullscreen imersivo no Android
+        run: |
+          python3 scripts/set_android_fullscreen.py android
+          grep -q SYSTEM_UI_FLAG_IMMERSIVE_STICKY android/app/src/main/java/br/com/blockcraft/aventura/MainActivity.java
+
       - name: Compilar APK de teste
         working-directory: android
         run: |
@@ -59,6 +64,6 @@ jobs:
       - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
-          name: Blockcraft-1.2.3-Android-debug
+          name: Blockcraft-1.2.4-Fullscreen-Android-debug
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error

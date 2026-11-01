@@ -36,3 +36,10 @@ Use um servidor estático (ex.: `python -m http.server 8080` no diretório e abr
 - Android: a etapa `Bloquear orientacao horizontal no Android` no GitHub Actions altera o AndroidManifest.xml gerado pelo Capacitor e fixa `android:screenOrientation="landscape"` na Activity.
 - Web: em celulares no modo retrato, um aviso instrui girar o aparelho. Navegadores nao garantem bloqueio de orientacao fora de tela cheia.
 - Na pasta do projeto, execute `npm run build` antes de publicar `dist/`.
+
+
+## Versão 1.2.4: tela cheia
+- APK: script `scripts/set_android_fullscreen.py` aplicado após `npx cap sync android`; esconde as barras do sistema com modo imersivo e mantém landscape. Gestos do sistema podem revelar temporariamente as barras.
+- Navegador: solicita fullscreen ao tocar em Jogar em dispositivos touch; depende do navegador e da permissão do usuário. Manifest PWA usa `display: fullscreen` e `orientation: landscape`.
+- Não há garantia de fullscreen no navegador comum (especialmente iOS).
+- Atualize o APK e confira no aparelho; não foi possível compilar e testar em Android real aqui.
